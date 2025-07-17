@@ -49,6 +49,9 @@ features['borrow_to_deposit_ratio'] = features['total_borrow_amount'] / (feature
 features['repay_to_borrow_ratio'] = features['total_repay_amount'] / (features['total_borrow_amount'] + 1e-9)
 features['tx_per_day'] = features['total_tx_count'] / (features['account_age_days'] + 1e-9)
 
+for col in ['total_deposit_amount', 'total_borrow_amount', 'total_repay_amount']:
+    features[col+'_log'] = np.log1p(features[col])
+
 features['is_liquidated'] = (features['liquidation_count'] > 0).astype(int)
 
 X = features.drop(['userWallet', 'is_liquidated', 'first_tx_time', 'last_tx_time', 'liquidation_count'], axis=1)
@@ -78,8 +81,7 @@ y_pred = (y_proba > threshold).astype(int)
 cm = confusion_matrix(y_test, y_pred)
 
 features['risk_prob'] = model.predict_proba(X)[:, 1]
-ranks = features['risk_prob'].rank(method='min') - 1
-normalized = ranks / (len(features) - 1)
-features['credit_score'] = ((1 - normalized) * 1000).astype(int)
+gamma = 3
+features['credit_score'] = (((1 - features['risk_prob']) ** gamma) * 1000).astype(int)
 features[['userWallet', 'credit_score']].to_csv("wallet_credit_scores.csv", index=False)
 print(features[['userWallet', 'credit_score']])
