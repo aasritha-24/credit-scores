@@ -57,20 +57,30 @@ DeFi lending platforms require reliable mechanisms to evaluate the creditworthin
 4. **Split data** into stratified train and test sets.  
 5. **Train XGBoost model** with class imbalance compensation.  
 6. **Predict liquidation risk probabilities** on full dataset.  
-7. **Assign credit scores** by ranking and scaling risk probabilities from 0 (highest risk) to 1000 (lowest risk).  
+7. **Assign credit scores** by using power transform from 0 (highest risk) to 1000 (lowest risk).  
 8. **Export scored wallets** to CSV.
 
 ---
 
 ## Scoring Methodology
 
-- Model's predicted liquidation probability (`risk_prob`) indicates wallet risk.  
-- Wallets are ranked by their `risk_prob` values.  
-- The rank is normalized and inverted such that lower risk gets higher scores.  
-- Scores scaled linearly to 0-1000 integer range:
+The credit score maps predicted liquidation risk to a 0–1000 scale using a **power transform**:
+- **Input:** Risk probability per wallet (`risk_prob`), ranging from 0 (low risk) to 1 (high risk).  
+- **Transformation:**
   ```bash
-  credit_score = int((1 - normalized_rank) * 1000)
+  credit_score = int(((1 - risk_prob) ** γ) * 1000)
   ```
+  where `γ` (gamma) is a hyperparameter controlling score spread aggressiveness.
+
+- **Interpretation:**  
+- Higher scores correspond to safer wallets with low predicted risk.  
+- The power transform accentuates score differences, especially emphasizing very low-risk wallets.  
+
+### Choosing γ (Gamma)
+
+- `γ = 2` (quadratic): moderate stretching of scores.  
+- `γ = 3` (cubic): stronger separation. 
+
 ---
 
 ## How to Run
