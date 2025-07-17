@@ -49,9 +49,6 @@ features['borrow_to_deposit_ratio'] = features['total_borrow_amount'] / (feature
 features['repay_to_borrow_ratio'] = features['total_repay_amount'] / (features['total_borrow_amount'] + 1e-9)
 features['tx_per_day'] = features['total_tx_count'] / (features['account_age_days'] + 1e-9)
 
-for col in ['total_deposit_amount', 'total_borrow_amount', 'total_repay_amount']:
-    features[col+'_log'] = np.log1p(features[col])
-
 features['is_liquidated'] = (features['liquidation_count'] > 0).astype(int)
 
 X = features.drop(['userWallet', 'is_liquidated', 'first_tx_time', 'last_tx_time', 'liquidation_count'], axis=1)
